@@ -1,0 +1,92 @@
+import java.util.Scanner;
+import java.util.Random;
+
+public class MindReaderGame{
+    private static final int Max_Round = 3;
+    private static final int Max_Attempts_Per_Rounds = 7;
+    private static final int Number_Range = 100;
+
+    private int currentRound;
+    private int totalScore;
+    private Scanner inputScanner;
+    private Random randomGenerator;
+
+    public MindReaderGame(){
+        inputScanner = new Scanner (System.in);
+        randomGenerator = new Random();
+        currentRound = 1;
+        totalScore = 0;
+    }
+    public void beginAdventure(){
+        System.out.println("Welcome to the Rohit's Mind Reader Game");
+        System.out.println("I've picked the numbers between 1-"+Number_Range+" . Can you read my mind?");
+        System.out.println("You'll play "+Max_Round+" rounds with "+Max_Attempts_Per_Rounds+" tries each.");
+        while(currentRound<=Max_Round){
+            playSingleRound();
+            currentRound++;
+        }
+        concludeJourney();
+    }
+    private void playSingleRound(){
+        int secretNumber = randomGenerator.nextInt(Number_Range)+1;
+        int attemptsLeft = Max_Attempts_Per_Rounds;
+        boolean hasWon = false;
+
+        System.out.println("-----------------------------------------");
+        System.out.println("Round "+currentRound+" of "+Max_Round+" ");
+        System.out.println("-----------------------------------------");
+        while(attemptsLeft>0 && !hasWon){
+            System.out.print("Attempts left "+attemptsLeft+" | Your Guess : ");
+            int userGuess = getValidNumber();
+            if(userGuess == secretNumber){
+                hasWon = true;
+                int roundScore = attemptsLeft * 10;
+                totalScore += roundScore;
+                System.out.println("Congrats, you earned "+totalScore+" points!");
+            } else if (userGuess < secretNumber) {
+                System.out.println("Too low, Aim higher!");
+            }
+            else{
+                System.out.println("Too high, Aim lower!");
+            }
+            attemptsLeft--;
+        }
+        if(!hasWon){
+            System.out.println("The secret number is "+secretNumber+", Better luck next round!");
+        }
+    }
+    private int getValidNumber(){
+        while(true){
+            try{
+                int number = inputScanner.nextInt();
+                if(number<1 || number>Number_Range){
+                    System.out.print("Please enter number from 1-"+Number_Range+" : ");
+                }
+                else{
+                    return number;
+                }
+            } catch (Exception e) {
+                System.out.println("Please enter only numbers");
+                inputScanner.next();
+            }
+        }
+    }
+    private void concludeJourney(){
+        System.out.println("\n ==========================================");
+        System.out.println("GameOver, Your final score is "+totalScore+".");
+        if(totalScore>=150){
+            System.out.println("Brilliant, you are a Mind Reading Master!");
+        } else if (totalScore>=90) {
+            System.out.println("Good Intution, with more practice you'll do great.");
+        }
+        else{
+            System.out.println("Keep practicing harder, your mind reading capability is too less");
+        }
+        inputScanner.close();
+    }
+
+    public static void main(String[] args) {
+        MindReaderGame game = new MindReaderGame();
+        game.beginAdventure();
+    }
+}
