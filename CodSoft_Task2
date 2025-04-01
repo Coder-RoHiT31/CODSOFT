@@ -1,0 +1,104 @@
+import java.util.Scanner;
+
+public class ScholarPerformanceAnalyzer{
+    private static final String[] Grade_Labels = {
+      "Academic Star", "Excellent", "Very Good", "Good","Need Improvement", "Fail"
+    };
+    private static final double[] Grade_Numbers = {
+      90,80,70,60,40,0
+    };
+
+    public static void main(String[] args) {
+        Scanner inputScanner = new Scanner (System.in);
+        System.out.println("Rohit's Scholar Performance Analyzer");
+        System.out.println("--------------------------------------");
+        int subjectCount = getPositiveInteger(inputScanner,"Enter number of subjects : ");
+        int[] marks = collectSubjectMarks(inputScanner, subjectCount);
+
+        analyzePerformance(marks);
+        inputScanner.close();
+    }
+    private static int[] collectSubjectMarks(Scanner scanner, int count){
+        int[] marks = new int[count];
+        System.out.println("\n Enter marks obtained (out of 100) for each subject");
+        for(int i =0; i<count; i++){
+            String prompt = String.format("Subject %d marks : ", i+1);
+            marks[i] = getValidMark(scanner,prompt);
+        }
+        return marks;
+    }
+    private static int getValidMark(Scanner scanner, String prompt){
+        while(true){
+            System.out.print(prompt);
+            try{
+                int mark = scanner.nextInt();
+                if(mark<0 || mark>100){
+                    System.out.println("Please enter a value between 0-100");
+                }else{
+                    return mark;
+                }
+            } catch (Exception e){
+                System.out.println("Invalid input. Numbers only please.");
+                scanner.next();
+            }
+        }
+    }
+    private static int getPositiveInteger(Scanner scanner, String prompt){
+        while(true){
+            System.out.print(prompt);
+            try{
+                int number = scanner.nextInt();
+                if(number>0){
+                    return number;
+                } else {
+                    System.out.println("Please enter a positive number");
+                }
+            } catch (Exception e) {
+                System.out.println("Invalid input. Whole numbers only please.");
+                scanner.next();
+            }
+        }
+    }
+    private static void analyzePerformance(int[] marks){
+        int total = calculateTotal(marks);
+        double average = calculateAverage(total, marks.length);
+        String grade = determineGrade(average);
+        displayResults(total, average, grade, marks.length);
+    }
+    private static int calculateTotal(int[] marks){
+        int sum = 0;
+        for(int mark : marks){
+            sum += mark;
+        }
+        return sum;
+    }
+    private static double calculateAverage(int total, int count){
+        return (double) total / count;
+    }
+    private static String determineGrade(double average){
+        for(int i=0; i<Grade_Numbers.length; i++){
+            if(average >= Grade_Numbers[i]){
+                return Grade_Labels[i];
+            }
+        }
+        return "Ungraded";
+    }
+    private static void displayResults(int total, double average, String grade, int subjectCount){
+        System.out.println("\n Performance Analysis ");
+        System.out.println("---------------------------");
+        System.out.printf("Total Subjects : %d\n", subjectCount);
+        System.out.printf("Aggregate Marks : %d / %d \n", total, subjectCount*100);
+        System.out.printf("Average Percentage : %.2f%%\n", average);
+        System.out.printf("Academic Standing : %s\n", grade);
+
+        if(average >= 90){
+            System.out.println("\n Exceptional Performance! Keep Shining");
+        } else if (average >= 70) {
+            System.out.println("\n Solid work! You're doing Great!");
+        } else if (average >= 40) {
+            System.out.println("\n Keep Pushing! You can improve!");
+        }else {
+            System.out.println("\n Let's focus on improvement areas.");
+        }
+    }
+}
