@@ -1,0 +1,186 @@
+import java.util.Scanner;
+
+public class RohitBankATM {
+    private static final String[] MAIN_MENU = {
+            " Cash Withdrawal",
+            " Deposit Funds",
+            " Balance Inquiry",
+            " Transaction History",
+            " Exit"
+    };
+
+    private static final double DAILY_WITHDRAWAL_LIMIT = 50000.00;
+    private BankAccount userAccount;
+    private double dailyWithdrawalTotal;
+    private Scanner inputScanner;
+
+    public RohitBankATM(BankAccount account) {
+        this.userAccount = account;
+        this.dailyWithdrawalTotal = 0.0;
+        this.inputScanner = new Scanner(System.in);
+    }
+
+    public void startSession() {
+        System.out.println("\n Welcome to RohitBank ATM ");
+        System.out.println("═══════════════════════════");
+
+        boolean sessionActive = true;
+        while (sessionActive) {
+            displayMainMenu();
+            int choice = getMenuChoice(1, MAIN_MENU.length);
+
+            switch (choice) {
+                case 1 -> performWithdrawal();
+                case 2 -> performDeposit();
+                case 3 -> checkBalance();
+                case 4 -> showTransactionHistory();
+                case 5 -> sessionActive = endSession();
+            }
+        }
+    }
+
+    private void displayMainMenu() {
+        System.out.println("\n🔹 Main Menu:");
+        for (int i = 0; i < MAIN_MENU.length; i++) {
+            System.out.printf("%d. %s\n", i + 1, MAIN_MENU[i]);
+        }
+    }
+
+    private int getMenuChoice(int min, int max) {
+        while (true) {
+            System.out.print("\nEnter your choice: ");
+            try {
+                int choice = inputScanner.nextInt();
+                if (choice >= min && choice <= max) {
+                    return choice;
+                }
+                System.out.printf("Please enter between %d-%d\n", min, max);
+            } catch (Exception e) {
+                System.out.println("Invalid input. Numbers only please.");
+                inputScanner.next(); // Clear invalid input
+            }
+        }
+    }
+
+    private void performWithdrawal() {
+        System.out.println("\n Withdrawal Menu");
+        System.out.println("──────────────────");
+        System.out.printf("Available balance: ₹%.2f\n", userAccount.getBalance());
+        System.out.printf("Remaining daily limit: ₹%.2f\n", DAILY_WITHDRAWAL_LIMIT - dailyWithdrawalTotal);
+
+        System.out.print("\nEnter amount to withdraw: ₹");
+        double amount = getPositiveAmount();
+
+        if (amount > userAccount.getBalance()) {
+            System.out.println(" Insufficient funds in account");
+        } else if (dailyWithdrawalTotal + amount > DAILY_WITHDRAWAL_LIMIT) {
+            System.out.println(" Exceeds daily withdrawal limit");
+        } else {
+            userAccount.withdraw(amount);
+            dailyWithdrawalTotal += amount;
+            System.out.printf(" Success! ₹%.2f dispensed\n", amount);
+            System.out.printf("New balance: ₹%.2f\n", userAccount.getBalance());
+            userAccount.recordTransaction("Withdrawal", -amount);
+        }
+    }
+
+    private void performDeposit() {
+        System.out.println("\n Deposit Menu");
+        System.out.println("───────────────");
+        System.out.print("Enter amount to deposit: ₹");
+        double amount = getPositiveAmount();
+
+        userAccount.deposit(amount);
+        System.out.printf(" ₹%.2f deposited successfully\n", amount);
+        System.out.printf("New balance: ₹%.2f\n", userAccount.getBalance());
+        userAccount.recordTransaction("Deposit", amount);
+    }
+
+    private void checkBalance() {
+        System.out.println("\n Account Summary");
+        System.out.println("─────────────────");
+        System.out.printf("Current Balance: ₹%.2f\n", userAccount.getBalance());
+        System.out.printf("Daily Withdrawals: ₹%.2f/%.2f\n", dailyWithdrawalTotal, DAILY_WITHDRAWAL_LIMIT);
+        userAccount.recordTransaction("Balance Check", 0);
+    }
+
+    private void showTransactionHistory() {
+        System.out.println("\n Transaction History");
+        System.out.println("─────────────────────");
+        userAccount.displayTransactions();
+    }
+
+    private boolean endSession() {
+        System.out.println("\nThank you for using RohitBank ATM!");
+        System.out.println("Please take your card ");
+        System.out.println("Have a nice day! ");
+        return false;
+    }
+
+    private double getPositiveAmount() {
+        while (true) {
+            try {
+                double amount = inputScanner.nextDouble();
+                if (amount > 0) {
+                    return amount;
+                }
+                System.out.println("Please enter a positive amount");
+            } catch (Exception e) {
+                System.out.println("Invalid input. Numbers only please.");
+                inputScanner.next();
+            }
+        }
+    }
+
+    public static void main(String[] args) {
+        BankAccount account = new BankAccount(25000.00);
+        RohitBankATM atm = new RohitBankATM(account);
+        atm.startSession();
+    }
+}
+
+class BankAccount {
+    private double balance;
+    private String[] transactionHistory;
+    private int transactionCount;
+
+    public BankAccount(double initialBalance) {
+        this.balance = initialBalance;
+        this.transactionHistory = new String[100];
+        this.transactionCount = 0;
+    }
+
+    public double getBalance() {
+        return balance;
+    }
+
+    public void withdraw(double amount) {
+        balance -= amount;
+    }
+
+    public void deposit(double amount) {
+        balance += amount;
+    }
+
+    public void recordTransaction(String type, double amount) {
+        if (transactionCount < transactionHistory.length) {
+            String transaction = String.format("%s: %s₹%.2f | Balance: ₹%.2f",
+                    java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")),
+                    amount >= 0 ? "+" : "", amount, balance);
+            transactionHistory[transactionCount++] = transaction;
+        }
+    }
+
+    public void displayTransactions() {
+        if (transactionCount == 0) {
+            System.out.println("No transactions yet");
+            return;
+        }
+
+        System.out.println("Date/Time          | Type           | Amount     | Balance");
+        System.out.println("───────────────────────────────────────────────────────────");
+        for (int i = 0; i < transactionCount; i++) {
+            System.out.println(transactionHistory[i]);
+        }
+    }
+}
