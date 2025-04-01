@@ -1,0 +1,73 @@
+import java.util.*;
+import java.net.*;
+import java.io.*;
+
+public class GlobalCurrencyConverter {
+    private static final Map<String, String> CURRENCY_SYMBOLS = Map.of(
+            "USD", "$", "EUR", "€", "GBP", "£", "JPY", "¥",
+            "AUD", "A$", "CAD", "C$", "CNY", "¥", "INR", "₹"
+    );
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.println("Currency Converter");
+        System.out.println("==================");
+
+        while (true) {
+            System.out.print("\nBase currency (e.g. USD): ");
+            String base = scanner.next().toUpperCase();
+            System.out.print("Target currency: ");
+            String target = scanner.next().toUpperCase();
+            System.out.print("Amount: ");
+            double amount = scanner.nextDouble();
+
+            try {
+                double rate = getExchangeRate(base, target);
+                double result = amount * rate;
+
+                System.out.printf("\n%s%.2f = %s%.2f (Rate: 1 %s = %.4f %s)\n",
+                        CURRENCY_SYMBOLS.getOrDefault(base, ""), amount,
+                        CURRENCY_SYMBOLS.getOrDefault(target, ""), result,
+                        base, rate, target);
+            } catch (Exception e) {
+                System.out.println("Error: " + e.getMessage());
+            }
+
+            System.out.print("\nAnother conversion? (Y/N): ");
+            if (!scanner.next().equalsIgnoreCase("Y")) break;
+        }
+
+        System.out.println("\nThank you for using the converter!");
+        scanner.close();
+    }
+
+    private static double getExchangeRate(String base, String target) throws IOException {
+        if (base.equals(target)) return 1.0;
+
+        String urlStr = "https://api.exchangerate-api.com/v4/latest/" + base;
+        URL url = new URL(urlStr);
+        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+        conn.setRequestMethod("GET");
+
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+            StringBuilder response = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                response.append(line);
+            }
+
+            // Simple JSON parsing without external library
+            String json = response.toString();
+            String rateKey = "\"" + target + "\":";
+            int ratePos = json.indexOf(rateKey);
+            if (ratePos == -1) throw new IOException("Currency not found");
+
+            int start = ratePos + rateKey.length();
+            int end = json.indexOf(",", start);
+            if (end == -1) end = json.indexOf("}", start);
+
+            return Double.parseDouble(json.substring(start, end).trim());
+        }
+    }
+}
